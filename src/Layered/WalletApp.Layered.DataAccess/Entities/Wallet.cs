@@ -13,6 +13,9 @@ public class Wallet
 
     public decimal Balance { get; set; }
 
+    [Required]
+    public string Currency { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; }
 
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

@@ -18,10 +18,10 @@ public class TransactionService : ITransactionUseCase
 
     public async Task<Transaction> DepositAsync(Guid walletId, decimal amount)
     {
-        var money = new Money(amount); // validates positive and <= daily limit
+        var money = new Money(amount);
         var wallet = await GetWalletOrThrowAsync(walletId);
 
-        var tx = Transaction.Create(walletId, null, TransactionType.Deposit, money);
+        var tx = Transaction.Create(walletId, null, TransactionType.Deposit, money, wallet.Currency);
         await _transactionRepo.AddAsync(tx);
 
         wallet.Deposit(money);
@@ -37,13 +37,13 @@ public class TransactionService : ITransactionUseCase
         var money = new Money(amount);
         var wallet = await GetWalletOrThrowAsync(walletId);
 
-        var tx = Transaction.Create(walletId, null, TransactionType.Withdrawal, money);
+        var tx = Transaction.Create(walletId, null, TransactionType.Withdrawal, money, wallet.Currency);
         await _transactionRepo.AddAsync(tx);
 
         try
         {
             await CheckDailyLimitAsync(walletId, money);
-            wallet.Withdraw(money); // throws if insufficient
+            wallet.Withdraw(money);
             tx.Complete();
             await _walletRepo.UpdateAsync(wallet);
         }
@@ -67,7 +67,10 @@ public class TransactionService : ITransactionUseCase
         var source = await GetWalletOrThrowAsync(sourceWalletId);
         var target = await GetWalletOrThrowAsync(targetWalletId);
 
-        var tx = Transaction.Create(sourceWalletId, targetWalletId, TransactionType.Transfer, money);
+        // Currency rule enforced on the domain entity itself
+        source.EnsureSameCurrency(target);
+
+        var tx = Transaction.Create(sourceWalletId, targetWalletId, TransactionType.Transfer, money, source.Currency);
         await _transactionRepo.AddAsync(tx);
 
         try

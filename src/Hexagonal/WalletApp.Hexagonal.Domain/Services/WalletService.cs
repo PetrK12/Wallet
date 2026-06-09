@@ -11,13 +11,13 @@ public class WalletService : IWalletUseCase
 
     public WalletService(IWalletRepository walletRepo) => _walletRepo = walletRepo;
 
-    public async Task<Wallet> CreateWalletAsync(string ownerId)
+    public async Task<Wallet> CreateWalletAsync(string ownerId, string currency)
     {
         var existing = await _walletRepo.GetByOwnerIdAsync(ownerId);
         if (existing is not null)
             throw new InvalidOperationException($"Wallet already exists for owner '{ownerId}'.");
 
-        var wallet = Wallet.Create(ownerId);
+        var wallet = Wallet.Create(ownerId, currency);
         await _walletRepo.AddAsync(wallet);
         return wallet;
     }

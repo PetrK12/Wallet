@@ -55,5 +55,5 @@ public class TransactionController : ControllerBase
     }
 
     private static TransactionResponse Map(Transaction t) =>
-        new(t.Id, t.WalletId, t.TargetWalletId, t.Type.ToString(), t.Amount.Amount, t.Status.ToString(), t.CreatedAt);
+        new(t.Id, t.WalletId, t.TargetWalletId, t.Type.ToString(), t.Amount.Amount, t.Currency, t.Status.ToString(), t.CreatedAt);
 }

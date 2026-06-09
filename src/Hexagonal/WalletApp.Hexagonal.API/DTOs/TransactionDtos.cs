@@ -13,5 +13,6 @@ public record TransactionResponse(
     Guid? TargetWalletId,
     string Type,
     decimal Amount,
+    string Currency,
     string Status,
     DateTime CreatedAt);

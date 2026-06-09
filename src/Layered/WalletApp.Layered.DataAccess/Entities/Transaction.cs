@@ -18,6 +18,9 @@ public class Transaction
     public decimal Amount { get; set; }
 
     [Required]
+    public string Currency { get; set; } = string.Empty;
+
+    [Required]
     public string Status { get; set; } = "Pending"; // Pending, Completed, Failed
 
     public DateTime CreatedAt { get; set; }

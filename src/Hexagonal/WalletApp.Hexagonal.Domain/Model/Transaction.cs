@@ -8,6 +8,7 @@ public class Transaction
     public Guid? TargetWalletId { get; private set; }
     public TransactionType Type { get; private set; }
     public Money Amount { get; private set; }
+    public string Currency { get; private set; } = string.Empty;
     public TransactionStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -16,18 +17,20 @@ public class Transaction
     /// <summary>Restores a transaction from persisted state (used by the infrastructure mapper).</summary>
     public static Transaction Restore(
         Guid id, Guid walletId, Guid? targetWalletId,
-        TransactionType type, Money amount, TransactionStatus status, DateTime createdAt)
+        TransactionType type, Money amount, string currency, TransactionStatus status, DateTime createdAt)
         => new()
         {
             Id = id, WalletId = walletId, TargetWalletId = targetWalletId,
-            Type = type, Amount = amount, Status = status, CreatedAt = createdAt
+            Type = type, Amount = amount, Currency = currency, Status = status, CreatedAt = createdAt
         };
 
+    /// <summary>Creates a new pending transaction recording the wallet's currency.</summary>
     public static Transaction Create(
         Guid walletId,
         Guid? targetWalletId,
         TransactionType type,
-        Money amount)
+        Money amount,
+        string currency)
         => new()
         {
             Id = Guid.NewGuid(),
@@ -35,6 +38,7 @@ public class Transaction
             TargetWalletId = targetWalletId,
             Type = type,
             Amount = amount,
+            Currency = currency,
             Status = TransactionStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };

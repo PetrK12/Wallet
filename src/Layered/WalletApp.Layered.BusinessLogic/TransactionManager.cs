@@ -23,14 +23,13 @@ public class TransactionManager
         _db = db;
     }
 
-    /// <summary>Deposits a positive amount into the specified wallet.</summary>
+    /// <summary>Deposits a positive amount into the specified wallet, recording the wallet's currency.</summary>
     public async Task<Transaction> DepositAsync(Guid walletId, decimal amount)
     {
         ValidateAmount(amount);
-
         var wallet = await GetWalletOrThrowAsync(walletId);
 
-        var tx = CreateTransaction(walletId, null, "Deposit", amount, "Pending");
+        var tx = CreateTransaction(walletId, null, "Deposit", amount, wallet.Currency, "Pending");
         await _transactionRepo.AddAsync(tx);
 
         wallet.Balance += amount;
@@ -38,7 +37,6 @@ public class TransactionManager
 
         await _walletRepo.UpdateAsync(wallet);
         await _transactionRepo.UpdateAsync(tx);
-
         return tx;
     }
 
@@ -46,15 +44,14 @@ public class TransactionManager
     public async Task<Transaction> WithdrawAsync(Guid walletId, decimal amount)
     {
         ValidateAmount(amount);
-
         var wallet = await GetWalletOrThrowAsync(walletId);
-        var tx = CreateTransaction(walletId, null, "Withdrawal", amount, "Pending");
+
+        var tx = CreateTransaction(walletId, null, "Withdrawal", amount, wallet.Currency, "Pending");
         await _transactionRepo.AddAsync(tx);
 
         try
         {
             await ValidateDailyLimitAsync(walletId, amount);
-
             if (wallet.Balance < amount)
                 throw new InvalidOperationException("Insufficient balance.");
 
@@ -73,7 +70,7 @@ public class TransactionManager
         return tx;
     }
 
-    /// <summary>Atomically transfers a positive amount between two wallets, validating balance and daily limit.</summary>
+    /// <summary>Atomically transfers a positive amount between two wallets. Rejects cross-currency transfers.</summary>
     public async Task<Transaction> TransferAsync(Guid sourceWalletId, Guid targetWalletId, decimal amount)
     {
         ValidateAmount(amount);
@@ -83,14 +80,17 @@ public class TransactionManager
         var source = await GetWalletOrThrowAsync(sourceWalletId);
         var target = await GetWalletOrThrowAsync(targetWalletId);
 
-        var tx = CreateTransaction(sourceWalletId, targetWalletId, "Transfer", amount, "Pending");
+        if (source.Currency != target.Currency)
+            throw new InvalidOperationException(
+                $"Currency mismatch: cannot transfer from {source.Currency} wallet to {target.Currency} wallet.");
+
+        var tx = CreateTransaction(sourceWalletId, targetWalletId, "Transfer", amount, source.Currency, "Pending");
         await _transactionRepo.AddAsync(tx);
 
         await using var dbTx = await _db.Database.BeginTransactionAsync();
         try
         {
             await ValidateDailyLimitAsync(sourceWalletId, amount);
-
             if (source.Balance < amount)
                 throw new InvalidOperationException("Insufficient balance.");
 
@@ -108,7 +108,7 @@ public class TransactionManager
             await dbTx.RollbackAsync();
             tx.Status = "Failed";
             await _transactionRepo.UpdateAsync(tx);
-            throw new InvalidOperationException("Transfer failed: insufficient balance or daily limit exceeded.");
+            throw new InvalidOperationException("Transfer failed: insufficient balance, daily limit exceeded, or currency mismatch.");
         }
 
         return tx;
@@ -142,7 +142,7 @@ public class TransactionManager
     }
 
     private static Transaction CreateTransaction(
-        Guid walletId, Guid? targetWalletId, string type, decimal amount, string status)
+        Guid walletId, Guid? targetWalletId, string type, decimal amount, string currency, string status)
         => new()
         {
             Id = Guid.NewGuid(),
@@ -150,6 +150,7 @@ public class TransactionManager
             TargetWalletId = targetWalletId,
             Type = type,
             Amount = amount,
+            Currency = currency,
             Status = status,
             CreatedAt = DateTime.UtcNow
         };

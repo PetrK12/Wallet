@@ -15,20 +15,31 @@ public class WalletServiceTests
     {
         var svc = BuildService();
 
-        var wallet = await svc.CreateWalletAsync("user1");
+        var wallet = await svc.CreateWalletAsync("user1", "CZK");
 
         Assert.Equal("user1", wallet.OwnerId);
+        Assert.Equal("CZK", wallet.Currency);
         Assert.Equal(0m, wallet.Balance);
+    }
+
+    [Fact]
+    public async Task CreateWallet_CurrencyIsNormalizedToUppercase()
+    {
+        var svc = BuildService();
+
+        var wallet = await svc.CreateWalletAsync("user-lower", "czk");
+
+        Assert.Equal("CZK", wallet.Currency);
     }
 
     [Fact]
     public async Task CreateWallet_DuplicateOwner_Throws()
     {
         var svc = BuildService();
-        await svc.CreateWalletAsync("user1");
+        await svc.CreateWalletAsync("user1", "EUR");
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            svc.CreateWalletAsync("user1"));
+            svc.CreateWalletAsync("user1", "EUR"));
     }
 
     [Fact]
@@ -37,14 +48,23 @@ public class WalletServiceTests
         var svc = BuildService();
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            svc.CreateWalletAsync(""));
+            svc.CreateWalletAsync("", "CZK"));
+    }
+
+    [Fact]
+    public async Task CreateWallet_EmptyCurrency_Throws()
+    {
+        var svc = BuildService();
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            svc.CreateWalletAsync("user2", ""));
     }
 
     [Fact]
     public async Task GetWallet_ExistingId_ReturnsWallet()
     {
         var svc = BuildService();
-        var created = await svc.CreateWalletAsync("user2");
+        var created = await svc.CreateWalletAsync("user3", "USD");
 
         var retrieved = await svc.GetWalletAsync(created.Id);
 

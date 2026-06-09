@@ -11,7 +11,7 @@ public static class TransactionMapper
         var type = Enum.Parse<TransactionType>(e.Type);
         var status = Enum.Parse<TransactionStatus>(e.Status);
         var money = new Money(e.Amount);
-        return Transaction.Restore(e.Id, e.WalletId, e.TargetWalletId, type, money, status, e.CreatedAt);
+        return Transaction.Restore(e.Id, e.WalletId, e.TargetWalletId, type, money, e.Currency, status, e.CreatedAt);
     }
 
     public static TransactionDbEntity ToEntity(Transaction t) => new()
@@ -21,6 +21,7 @@ public static class TransactionMapper
         TargetWalletId = t.TargetWalletId,
         Type = t.Type.ToString(),
         Amount = t.Amount.Amount,
+        Currency = t.Currency,
         Status = t.Status.ToString(),
         CreatedAt = t.CreatedAt
     };

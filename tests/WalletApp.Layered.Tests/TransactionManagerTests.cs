@@ -31,11 +31,12 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Deposit_ValidAmount_IncreasesBalance()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u1");
+        var wallet = await _walletManager.CreateWalletAsync("u1", "CZK");
 
         var tx = await _transactionManager.DepositAsync(wallet.Id, 500m);
 
         Assert.Equal("Completed", tx.Status);
+        Assert.Equal("CZK", tx.Currency);
         var updated = await _walletManager.GetWalletAsync(wallet.Id);
         Assert.Equal(500m, updated.Balance);
     }
@@ -43,7 +44,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Deposit_NegativeAmount_Throws()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u2");
+        var wallet = await _walletManager.CreateWalletAsync("u2", "CZK");
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _transactionManager.DepositAsync(wallet.Id, -1m));
@@ -52,7 +53,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Deposit_ExceedsDailyLimit_Throws()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u3");
+        var wallet = await _walletManager.CreateWalletAsync("u3", "CZK");
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _transactionManager.DepositAsync(wallet.Id, 10_001m));
@@ -61,7 +62,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Withdraw_SufficientBalance_DecreasesBalance()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u4");
+        var wallet = await _walletManager.CreateWalletAsync("u4", "EUR");
         await _transactionManager.DepositAsync(wallet.Id, 1000m);
 
         var tx = await _transactionManager.WithdrawAsync(wallet.Id, 400m);
@@ -74,7 +75,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Withdraw_InsufficientBalance_ThrowsAndMarksTransactionFailed()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u5");
+        var wallet = await _walletManager.CreateWalletAsync("u5", "EUR");
         await _transactionManager.DepositAsync(wallet.Id, 100m);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -85,10 +86,10 @@ public class TransactionManagerTests : IDisposable
     }
 
     [Fact]
-    public async Task Transfer_ValidTransfer_MovesBalanceBetweenWallets()
+    public async Task Transfer_SameCurrency_MovesBalanceBetweenWallets()
     {
-        var source = await _walletManager.CreateWalletAsync("u6");
-        var target = await _walletManager.CreateWalletAsync("u7");
+        var source = await _walletManager.CreateWalletAsync("u6", "CZK");
+        var target = await _walletManager.CreateWalletAsync("u7", "CZK");
         await _transactionManager.DepositAsync(source.Id, 1000m);
 
         await _transactionManager.TransferAsync(source.Id, target.Id, 300m);
@@ -100,10 +101,21 @@ public class TransactionManagerTests : IDisposable
     }
 
     [Fact]
+    public async Task Transfer_DifferentCurrency_Throws()
+    {
+        var source = await _walletManager.CreateWalletAsync("u6b", "CZK");
+        var target = await _walletManager.CreateWalletAsync("u7b", "EUR");
+        await _transactionManager.DepositAsync(source.Id, 1000m);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.TransferAsync(source.Id, target.Id, 300m));
+    }
+
+    [Fact]
     public async Task Transfer_InsufficientBalance_ThrowsAndMarksTransactionFailed()
     {
-        var source = await _walletManager.CreateWalletAsync("u8");
-        var target = await _walletManager.CreateWalletAsync("u9");
+        var source = await _walletManager.CreateWalletAsync("u8", "USD");
+        var target = await _walletManager.CreateWalletAsync("u9", "USD");
         await _transactionManager.DepositAsync(source.Id, 100m);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -113,7 +125,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Transfer_SameWallet_Throws()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u10");
+        var wallet = await _walletManager.CreateWalletAsync("u10", "CZK");
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _transactionManager.TransferAsync(wallet.Id, wallet.Id, 100m));
@@ -122,7 +134,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task GetHistory_ReturnsTransactionsForWallet()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u11");
+        var wallet = await _walletManager.CreateWalletAsync("u11", "CZK");
         await _transactionManager.DepositAsync(wallet.Id, 200m);
         await _transactionManager.DepositAsync(wallet.Id, 300m);
 
@@ -134,7 +146,7 @@ public class TransactionManagerTests : IDisposable
     [Fact]
     public async Task Withdraw_ZeroAmount_Throws()
     {
-        var wallet = await _walletManager.CreateWalletAsync("u12");
+        var wallet = await _walletManager.CreateWalletAsync("u12", "CZK");
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _transactionManager.WithdrawAsync(wallet.Id, 0m));

@@ -7,13 +7,14 @@ namespace WalletApp.Hexagonal.Infrastructure.Mappers;
 public static class WalletMapper
 {
     public static Wallet ToDomain(WalletDbEntity e)
-        => Wallet.Restore(e.Id, e.OwnerId, e.Balance, e.CreatedAt);
+        => Wallet.Restore(e.Id, e.OwnerId, e.Balance, e.Currency, e.CreatedAt);
 
     public static WalletDbEntity ToEntity(Wallet w) => new()
     {
         Id = w.Id,
         OwnerId = w.OwnerId,
         Balance = w.Balance,
+        Currency = w.Currency,
         CreatedAt = w.CreatedAt
     };
 }

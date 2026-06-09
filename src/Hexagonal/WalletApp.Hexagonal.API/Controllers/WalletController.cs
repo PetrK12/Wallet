@@ -13,14 +13,14 @@ public class WalletController : ControllerBase
 
     public WalletController(IWalletUseCase walletUseCase) => _walletUseCase = walletUseCase;
 
-    /// <summary>Creates a wallet for the specified owner.</summary>
+    /// <summary>Creates a wallet for the specified owner with the given currency.</summary>
     [HttpPost]
     public async Task<IActionResult> CreateWallet([FromBody] CreateWalletRequest request)
     {
         try
         {
-            var wallet = await _walletUseCase.CreateWalletAsync(request.OwnerId);
-            var response = new WalletResponse(wallet.Id, wallet.OwnerId, wallet.Balance, wallet.CreatedAt);
+            var wallet = await _walletUseCase.CreateWalletAsync(request.OwnerId, request.Currency);
+            var response = new WalletResponse(wallet.Id, wallet.OwnerId, wallet.Balance, wallet.Currency, wallet.CreatedAt);
             return CreatedAtAction(nameof(GetWallet), new { id = wallet.Id }, response);
         }
         catch (InvalidOperationException ex) { return Conflict(ex.Message); }
@@ -34,7 +34,7 @@ public class WalletController : ControllerBase
         try
         {
             var wallet = await _walletUseCase.GetWalletAsync(id);
-            return Ok(new WalletResponse(wallet.Id, wallet.OwnerId, wallet.Balance, wallet.CreatedAt));
+            return Ok(new WalletResponse(wallet.Id, wallet.OwnerId, wallet.Balance, wallet.Currency, wallet.CreatedAt));
         }
         catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
     }

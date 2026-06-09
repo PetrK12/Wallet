@@ -18,6 +18,9 @@ public class TransactionDbEntity
     public decimal Amount { get; set; }
 
     [Required]
+    public string Currency { get; set; } = string.Empty;
+
+    [Required]
     public string Status { get; set; } = "Pending";
 
     public DateTime CreatedAt { get; set; }

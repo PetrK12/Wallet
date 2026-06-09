@@ -10,11 +10,13 @@ public class WalletManager
 
     public WalletManager(WalletRepository walletRepo) => _walletRepo = walletRepo;
 
-    /// <summary>Creates a new wallet for a user. Throws if the user already has a wallet.</summary>
-    public async Task<Wallet> CreateWalletAsync(string ownerId)
+    /// <summary>Creates a new wallet for a user with the specified currency. Throws if the user already has a wallet.</summary>
+    public async Task<Wallet> CreateWalletAsync(string ownerId, string currency)
     {
         if (string.IsNullOrWhiteSpace(ownerId))
             throw new ArgumentException("OwnerId must not be empty.", nameof(ownerId));
+        if (string.IsNullOrWhiteSpace(currency))
+            throw new ArgumentException("Currency must not be empty.", nameof(currency));
 
         var existing = await _walletRepo.GetByOwnerIdAsync(ownerId);
         if (existing is not null)
@@ -24,6 +26,7 @@ public class WalletManager
         {
             Id = Guid.NewGuid(),
             OwnerId = ownerId,
+            Currency = currency.ToUpperInvariant(),
             Balance = 0m,
             CreatedAt = DateTime.UtcNow
         };

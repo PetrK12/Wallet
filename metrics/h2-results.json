@@ -1,0 +1,160 @@
+{
+  "metric": "M3",
+  "hypothesis": "H2",
+  "change_description": "multi-currency support: Currency property on Wallet and Transaction, cross-currency transfer rejection",
+  "layered": {
+    "files_modified": [
+      "src/Layered/WalletApp.Layered.DataAccess/Entities/Wallet.cs",
+      "src/Layered/WalletApp.Layered.DataAccess/Entities/Transaction.cs",
+      "src/Layered/WalletApp.Layered.BusinessLogic/WalletManager.cs",
+      "src/Layered/WalletApp.Layered.BusinessLogic/TransactionManager.cs",
+      "src/Layered/WalletApp.Layered.API/DTOs/WalletDtos.cs",
+      "src/Layered/WalletApp.Layered.API/DTOs/TransactionDtos.cs",
+      "src/Layered/WalletApp.Layered.API/Controllers/WalletController.cs",
+      "src/Layered/WalletApp.Layered.API/Controllers/TransactionController.cs",
+      "tests/WalletApp.Layered.Tests/WalletManagerTests.cs",
+      "tests/WalletApp.Layered.Tests/TransactionManagerTests.cs"
+    ],
+    "files_created": [],
+    "total_files_touched": 10,
+    "business_logic_changes": [
+      {
+        "file": "src/Layered/WalletApp.Layered.BusinessLogic/WalletManager.cs",
+        "reason": "New currency parameter in CreateWalletAsync; currency validation; Currency assigned on Wallet entity"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.BusinessLogic/TransactionManager.cs",
+        "reason": "Cross-currency transfer rejection rule; Currency passed to all CreateTransaction calls; currency read from wallet entity"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.DataAccess/Entities/Wallet.cs",
+        "reason": "Currency property added to the ORM entity which also serves as the business object in layered — blurs boundary between data shape and domain rule"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.DataAccess/Entities/Transaction.cs",
+        "reason": "Currency property added to the ORM entity which also serves as the business object"
+      }
+    ],
+    "mechanical_changes": [
+      {
+        "file": "src/Layered/WalletApp.Layered.API/DTOs/WalletDtos.cs",
+        "reason": "Currency field added to CreateWalletRequest and WalletResponse records"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.API/DTOs/TransactionDtos.cs",
+        "reason": "Currency field added to TransactionResponse record"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.API/Controllers/WalletController.cs",
+        "reason": "Currency threaded from request to manager call and into response mapping"
+      },
+      {
+        "file": "src/Layered/WalletApp.Layered.API/Controllers/TransactionController.cs",
+        "reason": "Currency added to Map() response projection"
+      },
+      {
+        "file": "tests/WalletApp.Layered.Tests/WalletManagerTests.cs",
+        "reason": "All CreateWalletAsync calls updated with currency argument; new currency-specific assertions and tests added"
+      },
+      {
+        "file": "tests/WalletApp.Layered.Tests/TransactionManagerTests.cs",
+        "reason": "All CreateWalletAsync calls updated with currency argument; cross-currency transfer test added"
+      }
+    ]
+  },
+  "hexagonal": {
+    "files_modified": [
+      "src/Hexagonal/WalletApp.Hexagonal.Domain/Model/Wallet.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Domain/Model/Transaction.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Domain/Ports/Input/IWalletUseCase.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Domain/Services/WalletService.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Domain/Services/TransactionService.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Persistence/WalletDbEntity.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Persistence/TransactionDbEntity.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Mappers/WalletMapper.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Mappers/TransactionMapper.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.API/DTOs/WalletDtos.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.API/DTOs/TransactionDtos.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.API/Controllers/WalletController.cs",
+      "src/Hexagonal/WalletApp.Hexagonal.API/Controllers/TransactionController.cs",
+      "tests/WalletApp.Hexagonal.Tests/WalletServiceTests.cs",
+      "tests/WalletApp.Hexagonal.Tests/TransactionServiceTests.cs"
+    ],
+    "files_created": [],
+    "total_files_touched": 15,
+    "business_logic_changes": [
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Domain/Model/Wallet.cs",
+        "reason": "Currency property, validation in Wallet.Create, EnsureSameCurrency() domain method encapsulating the cross-currency rule, Restore updated"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Domain/Model/Transaction.cs",
+        "reason": "Currency property, Transaction.Create and Restore signatures updated to carry currency"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Domain/Ports/Input/IWalletUseCase.cs",
+        "reason": "CreateWalletAsync contract updated with currency parameter — interface is part of the domain boundary"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Domain/Services/WalletService.cs",
+        "reason": "Currency forwarded to Wallet.Create"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Domain/Services/TransactionService.cs",
+        "reason": "EnsureSameCurrency called before transfer; currency passed to Transaction.Create for all operation types"
+      }
+    ],
+    "mechanical_changes": [
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Persistence/WalletDbEntity.cs",
+        "reason": "Currency column added to ORM entity"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Persistence/TransactionDbEntity.cs",
+        "reason": "Currency column added to ORM entity"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Mappers/WalletMapper.cs",
+        "reason": "Currency mapped in ToDomain and ToEntity"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.Infrastructure/Mappers/TransactionMapper.cs",
+        "reason": "Currency mapped in ToDomain and ToEntity"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.API/DTOs/WalletDtos.cs",
+        "reason": "Currency field added to CreateWalletRequest and WalletResponse"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.API/DTOs/TransactionDtos.cs",
+        "reason": "Currency field added to TransactionResponse"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.API/Controllers/WalletController.cs",
+        "reason": "Currency threaded from request to use case call and into response"
+      },
+      {
+        "file": "src/Hexagonal/WalletApp.Hexagonal.API/Controllers/TransactionController.cs",
+        "reason": "Currency added to Map() response projection"
+      },
+      {
+        "file": "tests/WalletApp.Hexagonal.Tests/WalletServiceTests.cs",
+        "reason": "All CreateWalletAsync calls updated; currency assertion and empty-currency test added"
+      },
+      {
+        "file": "tests/WalletApp.Hexagonal.Tests/TransactionServiceTests.cs",
+        "reason": "All CreateWalletAsync calls updated; cross-currency transfer test added; currency assertion on deposit"
+      }
+    ]
+  },
+  "analysis": {
+    "layered_total": 10,
+    "hexagonal_total": 15,
+    "difference": 5,
+    "layered_business_logic_files": 4,
+    "hexagonal_business_logic_files": 5,
+    "layered_mechanical_files": 6,
+    "hexagonal_mechanical_files": 10,
+    "notes": "Hexagonal touches 5 more files (15 vs 10) because of its strict layer separation: the domain model, the port interface, both infrastructure ORM entities, and both mappers are all distinct files. In the layered design, the ORM entities ARE the business objects, so no separate domain model or mapper files exist — the currency field is added once to an entity that serves both roles. However, this means the layered entity boundary blurs: DataAccess entities had to change to satisfy a business rule, confirming the M1 coupling finding from H1. The extra hexagonal files are all purely mechanical (ORM entities, mappers, DTOs) — the actual business logic change (EnsureSameCurrency) is cleanly isolated to the domain model and services, with zero changes required in Infrastructure. In Layered, the currency mismatch rule required modifying TransactionManager which directly reads Currency from the DataAccess entity."
+  }
+}

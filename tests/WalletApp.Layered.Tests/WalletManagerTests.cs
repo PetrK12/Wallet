@@ -26,32 +26,48 @@ public class WalletManagerTests : IDisposable
     [Fact]
     public async Task CreateWallet_ValidOwner_ReturnsWalletWithZeroBalance()
     {
-        var wallet = await _manager.CreateWalletAsync("user1");
+        var wallet = await _manager.CreateWalletAsync("user1", "CZK");
 
         Assert.Equal("user1", wallet.OwnerId);
+        Assert.Equal("CZK", wallet.Currency);
         Assert.Equal(0m, wallet.Balance);
+    }
+
+    [Fact]
+    public async Task CreateWallet_CurrencyIsNormalizedToUppercase()
+    {
+        var wallet = await _manager.CreateWalletAsync("user-lower", "czk");
+
+        Assert.Equal("CZK", wallet.Currency);
     }
 
     [Fact]
     public async Task CreateWallet_DuplicateOwner_Throws()
     {
-        await _manager.CreateWalletAsync("user1");
+        await _manager.CreateWalletAsync("user1", "EUR");
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _manager.CreateWalletAsync("user1"));
+            _manager.CreateWalletAsync("user1", "EUR"));
     }
 
     [Fact]
     public async Task CreateWallet_EmptyOwner_Throws()
     {
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _manager.CreateWalletAsync(""));
+            _manager.CreateWalletAsync("", "CZK"));
+    }
+
+    [Fact]
+    public async Task CreateWallet_EmptyCurrency_Throws()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _manager.CreateWalletAsync("user2", ""));
     }
 
     [Fact]
     public async Task GetWallet_ExistingId_ReturnsWallet()
     {
-        var created = await _manager.CreateWalletAsync("user2");
+        var created = await _manager.CreateWalletAsync("user3", "USD");
 
         var retrieved = await _manager.GetWalletAsync(created.Id);
 

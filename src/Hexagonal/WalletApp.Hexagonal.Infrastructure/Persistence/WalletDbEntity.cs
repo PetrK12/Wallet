@@ -13,5 +13,8 @@ public class WalletDbEntity
 
     public decimal Balance { get; set; }
 
+    [Required]
+    public string Currency { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; }
 }
