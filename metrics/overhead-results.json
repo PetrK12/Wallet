@@ -1,0 +1,181 @@
+{
+  "generated_at": "2026-06-09",
+  "note": "Logical LOC = non-empty, non-comment lines. Test projects excluded from source counts.",
+
+  "layered": {
+    "projects": {
+      "WalletApp.Layered.DataAccess": {
+        "files": 5,
+        "public_types": 5,
+        "lloc": 98,
+        "file_list": [
+          { "file": "Entities/Transaction.cs",            "lloc": 16 },
+          { "file": "Entities/Wallet.cs",                 "lloc": 12 },
+          { "file": "Repositories/TransactionRepository.cs", "lloc": 32 },
+          { "file": "Repositories/WalletRepository.cs",   "lloc": 22 },
+          { "file": "WalletDbContext.cs",                  "lloc": 16 }
+        ]
+      },
+      "WalletApp.Layered.BusinessLogic": {
+        "files": 2,
+        "public_types": 2,
+        "lloc": 154,
+        "file_list": [
+          { "file": "TransactionManager.cs", "lloc": 122 },
+          { "file": "WalletManager.cs",      "lloc": 32  }
+        ]
+      },
+      "WalletApp.Layered.API": {
+        "files": 5,
+        "public_types": 7,
+        "lloc": 119,
+        "file_list": [
+          { "file": "Controllers/TransactionController.cs", "lloc": 45 },
+          { "file": "Controllers/WalletController.cs",      "lloc": 33 },
+          { "file": "DTOs/TransactionDtos.cs",              "lloc": 11 },
+          { "file": "DTOs/WalletDtos.cs",                   "lloc": 3  },
+          { "file": "Program.cs",                           "lloc": 27 }
+        ]
+      }
+    },
+    "totals": {
+      "files": 12,
+      "public_types": 14,
+      "lloc": 371
+    }
+  },
+
+  "hexagonal": {
+    "projects": {
+      "WalletApp.Hexagonal.Domain": {
+        "files": 10,
+        "public_types": 11,
+        "lloc": 244,
+        "file_list": [
+          { "file": "Model/Money.cs",                       "lloc": 20 },
+          { "file": "Model/Transaction.cs",                 "lloc": 37 },
+          { "file": "Model/TransactionStatus.cs",           "lloc": 2  },
+          { "file": "Model/TransactionType.cs",             "lloc": 2  },
+          { "file": "Model/Wallet.cs",                      "lloc": 31 },
+          { "file": "Ports/Input/ITransactionUseCase.cs",   "lloc": 9  },
+          { "file": "Ports/Input/IWalletUseCase.cs",        "lloc": 7  },
+          { "file": "Ports/Output/ITransactionRepository.cs","lloc": 10 },
+          { "file": "Ports/Output/IWalletRepository.cs",    "lloc": 9  },
+          { "file": "Services/TransactionService.cs",       "lloc": 92 },
+          { "file": "Services/WalletService.cs",            "lloc": 25 }
+        ]
+      },
+      "WalletApp.Hexagonal.Infrastructure": {
+        "files": 7,
+        "public_types": 7,
+        "lloc": 157,
+        "file_list": [
+          { "file": "Adapters/EfTransactionRepository.cs",  "lloc": 51 },
+          { "file": "Adapters/EfWalletRepository.cs",       "lloc": 33 },
+          { "file": "Mappers/TransactionMapper.cs",         "lloc": 23 },
+          { "file": "Mappers/WalletMapper.cs",              "lloc": 15 },
+          { "file": "Persistence/TransactionDbEntity.cs",   "lloc": 15 },
+          { "file": "Persistence/WalletAppDbContext.cs",    "lloc": 9  },
+          { "file": "Persistence/WalletDbEntity.cs",        "lloc": 11 }
+        ]
+      },
+      "WalletApp.Hexagonal.API": {
+        "files": 5,
+        "public_types": 7,
+        "lloc": 121,
+        "file_list": [
+          { "file": "Controllers/TransactionController.cs", "lloc": 45 },
+          { "file": "Controllers/WalletController.cs",      "lloc": 33 },
+          { "file": "DTOs/TransactionDtos.cs",              "lloc": 11 },
+          { "file": "DTOs/WalletDtos.cs",                   "lloc": 3  },
+          { "file": "Program.cs",                           "lloc": 29 }
+        ]
+      }
+    },
+    "totals": {
+      "files": 22,
+      "public_types": 25,
+      "lloc": 522
+    }
+  },
+
+  "structural_overhead": {
+    "definition": "Files that exist in Hexagonal but have no direct equivalent in Layered: port interfaces, separate ORM entities, and domain-to-ORM mappers.",
+    "overhead_files": [
+      { "file": "Ports/Input/IWalletUseCase.cs",             "category": "port_interface",    "lloc": 7  },
+      { "file": "Ports/Input/ITransactionUseCase.cs",        "category": "port_interface",    "lloc": 9  },
+      { "file": "Ports/Output/IWalletRepository.cs",         "category": "port_interface",    "lloc": 9  },
+      { "file": "Ports/Output/ITransactionRepository.cs",    "category": "port_interface",    "lloc": 10 },
+      { "file": "Persistence/WalletDbEntity.cs",             "category": "separate_orm_entity","lloc": 11 },
+      { "file": "Persistence/TransactionDbEntity.cs",        "category": "separate_orm_entity","lloc": 15 },
+      { "file": "Mappers/WalletMapper.cs",                   "category": "mapper",            "lloc": 15 },
+      { "file": "Mappers/TransactionMapper.cs",              "category": "mapper",            "lloc": 23 }
+    ],
+    "overhead_file_count": 8,
+    "overhead_lloc": 99,
+    "hexagonal_total_lloc": 522,
+    "overhead_pct_of_hexagonal": 18.97,
+    "by_category": {
+      "port_interfaces":      { "files": 4, "lloc": 35 },
+      "separate_orm_entities":{ "files": 2, "lloc": 26 },
+      "mappers":              { "files": 2, "lloc": 38 }
+    },
+    "not_counted_as_overhead": {
+      "note": "Money.cs, TransactionStatus.cs, TransactionType.cs are domain enrichment (value object + enums replacing magic strings), not pure structural overhead.",
+      "files": ["Model/Money.cs", "Model/TransactionStatus.cs", "Model/TransactionType.cs"],
+      "lloc": 24
+    }
+  },
+
+  "comparison": {
+    "file_delta": {
+      "layered_files": 12,
+      "hexagonal_files": 22,
+      "extra_files_in_hexagonal": 10,
+      "overhead_files": 8,
+      "domain_enrichment_files": 2
+    },
+    "lloc_delta": {
+      "layered_lloc": 371,
+      "hexagonal_lloc": 522,
+      "absolute_difference": 151,
+      "hexagonal_is_larger_by_pct": 40.7
+    },
+    "type_delta": {
+      "layered_types": 14,
+      "hexagonal_types": 25,
+      "extra_types_in_hexagonal": 11
+    }
+  },
+
+  "tests": {
+    "WalletApp.Layered.Tests": {
+      "files": 3,
+      "public_test_classes": 2,
+      "lloc": 166,
+      "infrastructure_dependency": "EF Core InMemory required for all tests",
+      "isolation_classification": "integration",
+      "file_list": [
+        { "file": "TransactionManagerTests.cs", "lloc": 112 },
+        { "file": "WalletManagerTests.cs",      "lloc": 53  },
+        { "file": "Usings.cs",                  "lloc": 1   }
+      ]
+    },
+    "WalletApp.Hexagonal.Tests": {
+      "files": 6,
+      "public_test_classes": 3,
+      "test_double_classes": 2,
+      "lloc": 238,
+      "infrastructure_dependency": "None — hand-written in-memory test doubles only",
+      "isolation_classification": "isolated",
+      "file_list": [
+        { "file": "TransactionServiceTests.cs",              "lloc": 102 },
+        { "file": "WalletServiceTests.cs",                   "lloc": 47  },
+        { "file": "MoneyValueObjectTests.cs",                "lloc": 33  },
+        { "file": "InMemory/InMemoryTransactionRepository.cs","lloc": 34  },
+        { "file": "InMemory/InMemoryWalletRepository.cs",    "lloc": 21  },
+        { "file": "Usings.cs",                               "lloc": 1   }
+      ]
+    }
+  }
+}
