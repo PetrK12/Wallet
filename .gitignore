@@ -1,1 +1,13 @@
 /src/Layered/WalletApp.Layered.API/bin/Debug/net7.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+# Build outputs - platí pro celé solution včetně tools/
+**/bin/
+**/obj/
+
+# Rider / .NET specific
+.idea/
+*.user
+*.suo
+
+# Pokud chceš výslovně i pro tools adresář (redundantní, ale explicitní)
+tools/**/bin/
+tools/**/obj/
