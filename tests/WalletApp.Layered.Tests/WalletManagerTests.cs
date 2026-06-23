@@ -64,4 +64,11 @@ public class WalletManagerTests : IDisposable
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _manager.GetWalletAsync(Guid.NewGuid()));
     }
+
+    [Fact]
+    public async Task CreateWallet_WhitespaceOwnerId_ThrowsArgumentException()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _manager.CreateWalletAsync("   "));
+    }
 }
