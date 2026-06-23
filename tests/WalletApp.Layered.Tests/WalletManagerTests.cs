@@ -85,6 +85,16 @@ public class WalletManagerTests : IDisposable
     public async Task CreateWallet_WhitespaceOwnerId_ThrowsArgumentException()
     {
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _manager.CreateWalletAsync("   "));
+            _manager.CreateWalletAsync("   ", "CZK"));
+    }
+
+    [Fact]
+    public async Task CreateWallet_ValidInputs_ReturnsWalletWithUppercasedCurrencyAndZeroBalance()
+    {
+        var wallet = await _manager.CreateWalletAsync("alice", "eur");
+
+        Assert.Equal("alice", wallet.OwnerId);
+        Assert.Equal("EUR", wallet.Currency);
+        Assert.Equal(0m, wallet.Balance);
     }
 }

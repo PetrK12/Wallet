@@ -146,7 +146,7 @@ public class TransactionServiceTests
     public async Task Deposit_ZeroAmount_ThrowsArgumentException()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u13");
+        var wallet = await walletSvc.CreateWalletAsync("u13", "CZK");
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
             txSvc.DepositAsync(wallet.Id, 0m));
@@ -165,7 +165,7 @@ public class TransactionServiceTests
     public async Task Withdraw_NegativeAmount_ThrowsArgumentException()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u14");
+        var wallet = await walletSvc.CreateWalletAsync("u14", "CZK");
         await txSvc.DepositAsync(wallet.Id, 500m);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -176,7 +176,7 @@ public class TransactionServiceTests
     public async Task Withdraw_ExceedingDailyLimit_ThrowsInvalidOperationException()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u15");
+        var wallet = await walletSvc.CreateWalletAsync("u15", "CZK");
         await txSvc.DepositAsync(wallet.Id, 10_000m);
         await txSvc.WithdrawAsync(wallet.Id, 8_000m); // daily withdrawal total = 8,000
         await txSvc.DepositAsync(wallet.Id, 10_000m); // refill balance
@@ -189,7 +189,7 @@ public class TransactionServiceTests
     public async Task Withdraw_OnSuccess_TransactionStatusIsCompleted()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u16");
+        var wallet = await walletSvc.CreateWalletAsync("u16", "CZK");
         await txSvc.DepositAsync(wallet.Id, 500m);
 
         var tx = await txSvc.WithdrawAsync(wallet.Id, 200m);
@@ -201,7 +201,7 @@ public class TransactionServiceTests
     public async Task Withdraw_OnFailure_TransactionStatusIsFailed()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u17");
+        var wallet = await walletSvc.CreateWalletAsync("u17", "CZK");
         await txSvc.DepositAsync(wallet.Id, 100m);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -216,8 +216,8 @@ public class TransactionServiceTests
     public async Task Transfer_OnSuccess_TransactionStatusIsCompleted()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var source = await walletSvc.CreateWalletAsync("u18s");
-        var target = await walletSvc.CreateWalletAsync("u18t");
+        var source = await walletSvc.CreateWalletAsync("u18s", "CZK");
+        var target = await walletSvc.CreateWalletAsync("u18t", "CZK");
         await txSvc.DepositAsync(source.Id, 1000m);
 
         var tx = await txSvc.TransferAsync(source.Id, target.Id, 300m);
@@ -229,8 +229,8 @@ public class TransactionServiceTests
     public async Task Transfer_OnFailure_TransactionStatusIsFailed()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var source = await walletSvc.CreateWalletAsync("u19s");
-        var target = await walletSvc.CreateWalletAsync("u19t");
+        var source = await walletSvc.CreateWalletAsync("u19s", "CZK");
+        var target = await walletSvc.CreateWalletAsync("u19t", "CZK");
         await txSvc.DepositAsync(source.Id, 100m);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -245,8 +245,8 @@ public class TransactionServiceTests
     public async Task Transfer_Fails_BothWalletBalancesUnchanged()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var source = await walletSvc.CreateWalletAsync("u20s");
-        var target = await walletSvc.CreateWalletAsync("u20t");
+        var source = await walletSvc.CreateWalletAsync("u20s", "CZK");
+        var target = await walletSvc.CreateWalletAsync("u20t", "CZK");
         await txSvc.DepositAsync(source.Id, 100m);
         await txSvc.DepositAsync(target.Id, 50m);
 
@@ -261,8 +261,8 @@ public class TransactionServiceTests
     public async Task Transfer_ExceedingDailyLimit_ThrowsInvalidOperationException()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var source = await walletSvc.CreateWalletAsync("u21s");
-        var target = await walletSvc.CreateWalletAsync("u21t");
+        var source = await walletSvc.CreateWalletAsync("u21s", "CZK");
+        var target = await walletSvc.CreateWalletAsync("u21t", "CZK");
         await txSvc.DepositAsync(source.Id, 10_000m);
         await txSvc.WithdrawAsync(source.Id, 8_000m); // daily total = 8,000
         await txSvc.DepositAsync(source.Id, 10_000m); // refill balance
@@ -275,7 +275,7 @@ public class TransactionServiceTests
     public async Task GetHistory_ReturnsTransactionsInDescendingChronologicalOrder()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u22");
+        var wallet = await walletSvc.CreateWalletAsync("u22", "CZK");
         await txSvc.DepositAsync(wallet.Id, 100m);
         await txSvc.DepositAsync(wallet.Id, 200m);
 
@@ -289,10 +289,21 @@ public class TransactionServiceTests
     public async Task GetHistory_ForNewWallet_ReturnsEmptyList()
     {
         var (walletSvc, txSvc) = BuildServices();
-        var wallet = await walletSvc.CreateWalletAsync("u23");
+        var wallet = await walletSvc.CreateWalletAsync("u23", "CZK");
 
         var history = await txSvc.GetHistoryAsync(wallet.Id);
 
         Assert.Empty(history);
+    }
+
+    [Fact]
+    public async Task Deposit_RecordsWalletCurrencyOnTransaction()
+    {
+        var (walletSvc, txSvc) = BuildServices();
+        var wallet = await walletSvc.CreateWalletAsync("u24", "USD");
+
+        var tx = await txSvc.DepositAsync(wallet.Id, 250m);
+
+        Assert.Equal("USD", tx.Currency);
     }
 }

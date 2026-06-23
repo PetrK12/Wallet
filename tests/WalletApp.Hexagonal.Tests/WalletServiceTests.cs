@@ -86,6 +86,18 @@ public class WalletServiceTests
         var svc = BuildService();
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            svc.CreateWalletAsync("   "));
+            svc.CreateWalletAsync("   ", "CZK"));
+    }
+
+    [Fact]
+    public async Task CreateWallet_ValidInputs_ReturnsWalletWithUppercasedCurrencyAndZeroBalance()
+    {
+        var svc = BuildService();
+
+        var wallet = await svc.CreateWalletAsync("alice", "eur");
+
+        Assert.Equal("alice", wallet.OwnerId);
+        Assert.Equal("EUR", wallet.Currency);
+        Assert.Equal(0m, wallet.Balance);
     }
 }
