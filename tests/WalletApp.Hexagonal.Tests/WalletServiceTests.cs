@@ -79,4 +79,13 @@ public class WalletServiceTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             svc.GetWalletAsync(Guid.NewGuid()));
     }
+
+    [Fact]
+    public async Task CreateWallet_WhitespaceOwnerId_ThrowsArgumentException()
+    {
+        var svc = BuildService();
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            svc.CreateWalletAsync("   "));
+    }
 }

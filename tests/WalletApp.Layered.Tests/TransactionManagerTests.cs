@@ -151,4 +151,147 @@ public class TransactionManagerTests : IDisposable
         await Assert.ThrowsAsync<ArgumentException>(() =>
             _transactionManager.WithdrawAsync(wallet.Id, 0m));
     }
+
+    [Fact]
+    public async Task Deposit_ZeroAmount_ThrowsArgumentException()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u13");
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _transactionManager.DepositAsync(wallet.Id, 0m));
+    }
+
+    [Fact]
+    public async Task Deposit_ToNonExistentWallet_ThrowsKeyNotFoundException()
+    {
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _transactionManager.DepositAsync(Guid.NewGuid(), 100m));
+    }
+
+    [Fact]
+    public async Task Withdraw_NegativeAmount_ThrowsArgumentException()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u14");
+        await _transactionManager.DepositAsync(wallet.Id, 500m);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _transactionManager.WithdrawAsync(wallet.Id, -1m));
+    }
+
+    [Fact]
+    public async Task Withdraw_ExceedingDailyLimit_ThrowsInvalidOperationException()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u15");
+        await _transactionManager.DepositAsync(wallet.Id, 10_000m);
+        await _transactionManager.WithdrawAsync(wallet.Id, 8_000m); // daily withdrawal total = 8,000
+        await _transactionManager.DepositAsync(wallet.Id, 10_000m); // refill balance
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.WithdrawAsync(wallet.Id, 3_000m)); // 8k + 3k = 11k > 10k
+    }
+
+    [Fact]
+    public async Task Withdraw_OnSuccess_TransactionStatusIsCompleted()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u16");
+        await _transactionManager.DepositAsync(wallet.Id, 500m);
+
+        var tx = await _transactionManager.WithdrawAsync(wallet.Id, 200m);
+
+        Assert.Equal("Completed", tx.Status);
+    }
+
+    [Fact]
+    public async Task Withdraw_OnFailure_TransactionStatusIsFailed()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u17");
+        await _transactionManager.DepositAsync(wallet.Id, 100m);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.WithdrawAsync(wallet.Id, 500m));
+
+        var history = await _transactionManager.GetHistoryAsync(wallet.Id);
+        var withdrawalTx = history.First(t => t.Type == "Withdrawal");
+        Assert.Equal("Failed", withdrawalTx.Status);
+    }
+
+    [Fact]
+    public async Task Transfer_OnSuccess_TransactionStatusIsCompleted()
+    {
+        var source = await _walletManager.CreateWalletAsync("u18s");
+        var target = await _walletManager.CreateWalletAsync("u18t");
+        await _transactionManager.DepositAsync(source.Id, 1000m);
+
+        var tx = await _transactionManager.TransferAsync(source.Id, target.Id, 300m);
+
+        Assert.Equal("Completed", tx.Status);
+    }
+
+    [Fact]
+    public async Task Transfer_OnFailure_TransactionStatusIsFailed()
+    {
+        var source = await _walletManager.CreateWalletAsync("u19s");
+        var target = await _walletManager.CreateWalletAsync("u19t");
+        await _transactionManager.DepositAsync(source.Id, 100m);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.TransferAsync(source.Id, target.Id, 500m));
+
+        var history = await _transactionManager.GetHistoryAsync(source.Id);
+        var transferTx = history.First(t => t.Type == "Transfer");
+        Assert.Equal("Failed", transferTx.Status);
+    }
+
+    [Fact]
+    public async Task Transfer_Fails_BothWalletBalancesUnchanged()
+    {
+        var source = await _walletManager.CreateWalletAsync("u20s");
+        var target = await _walletManager.CreateWalletAsync("u20t");
+        await _transactionManager.DepositAsync(source.Id, 100m);
+        await _transactionManager.DepositAsync(target.Id, 50m);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.TransferAsync(source.Id, target.Id, 500m));
+
+        var updatedSource = await _walletManager.GetWalletAsync(source.Id);
+        var updatedTarget = await _walletManager.GetWalletAsync(target.Id);
+        Assert.Equal(100m, updatedSource.Balance);
+        Assert.Equal(50m, updatedTarget.Balance);
+    }
+
+    [Fact]
+    public async Task Transfer_ExceedingDailyLimit_ThrowsInvalidOperationException()
+    {
+        var source = await _walletManager.CreateWalletAsync("u21s");
+        var target = await _walletManager.CreateWalletAsync("u21t");
+        await _transactionManager.DepositAsync(source.Id, 10_000m);
+        await _transactionManager.WithdrawAsync(source.Id, 8_000m); // daily total = 8,000
+        await _transactionManager.DepositAsync(source.Id, 10_000m); // refill balance
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _transactionManager.TransferAsync(source.Id, target.Id, 3_000m)); // 8k + 3k = 11k > 10k
+    }
+
+    [Fact]
+    public async Task GetHistory_ReturnsTransactionsInDescendingChronologicalOrder()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u22");
+        await _transactionManager.DepositAsync(wallet.Id, 100m);
+        await _transactionManager.DepositAsync(wallet.Id, 200m);
+
+        var history = await _transactionManager.GetHistoryAsync(wallet.Id);
+
+        Assert.Equal(2, history.Count);
+        Assert.True(history[0].CreatedAt >= history[1].CreatedAt);
+    }
+
+    [Fact]
+    public async Task GetHistory_ForNewWallet_ReturnsEmptyList()
+    {
+        var wallet = await _walletManager.CreateWalletAsync("u23");
+
+        var history = await _transactionManager.GetHistoryAsync(wallet.Id);
+
+        Assert.Empty(history);
+    }
 }

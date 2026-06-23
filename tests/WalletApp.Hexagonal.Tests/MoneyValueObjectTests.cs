@@ -37,4 +37,20 @@ public class MoneyValueObjectTests
         var m = new Money(Money.DailyLimit);
         Assert.Equal(Money.DailyLimit, m.Amount);
     }
+
+    [Fact]
+    public void Money_ComparisonOperatorsWorkCorrectly()
+    {
+        var small = new Money(50m);
+        var large = new Money(100m);
+
+        Assert.True(large > small);
+        Assert.True(small < large);
+        Assert.True(large >= small);
+        Assert.True(small <= large);
+        Assert.True(large >= new Money(100m));
+        Assert.True(small <= new Money(50m));
+        Assert.False(small > large);
+        Assert.False(large < small);
+    }
 }
